@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: auditkm-backend
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application"

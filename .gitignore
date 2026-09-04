@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Ambiente virtual
+venv/
+.venv/
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Banco local
+db.sqlite3
+db.sqlite3-journal
+
+# Uploads
+media/
+
+# Arquivos estáticos gerados
+staticfiles/
+
+# Logs
+*.log
+logs/
+
+# Node
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Cache/testes
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
