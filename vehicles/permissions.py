@@ -8,6 +8,9 @@ class VehiclePermission(BasePermission):
         "list": "VEHICLE_VIEW",
         "retrieve": "VEHICLE_VIEW",
         "create": "VEHICLE_MANAGE",
+        "update": "VEHICLE_MANAGE",
+        "partial_update": "VEHICLE_MANAGE",
+        "destroy": "VEHICLE_MANAGE",
     }
 
     def has_permission(self, request, view):
@@ -24,15 +27,6 @@ class VehiclePermission(BasePermission):
 
         if not role:
             return False
-
-        # Editar e excluir veículos:
-        # somente Administrador.
-        if view.action in {
-            "update",
-            "partial_update",
-            "destroy",
-        }:
-            return role.name == "Administrador"
 
         required_permission = self.permission_map.get(
             view.action
