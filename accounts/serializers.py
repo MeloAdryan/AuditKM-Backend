@@ -18,7 +18,10 @@ class RoleSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    role = RoleSerializer(read_only=True)
+    role = RoleSerializer(
+        read_only=True,
+    )
+
     role_id = serializers.PrimaryKeyRelatedField(
         source="role",
         queryset=Role.objects.all(),
@@ -33,15 +36,36 @@ class UserSerializer(serializers.ModelSerializer):
         trim_whitespace=False,
     )
 
+    email = serializers.EmailField(
+        required=False,
+        allow_blank=True,
+    )
+
+    phone = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
+
+    first_name = serializers.CharField(
+        required=False,
+        allow_blank=True,
+    )
+
+    last_name = serializers.CharField(
+        required=False,
+        allow_blank=True,
+    )
+
     class Meta:
         model = User
+
         fields = [
             "id",
             "username",
             "first_name",
             "last_name",
             "email",
-            "cpf",
             "phone",
             "role",
             "role_id",
@@ -57,7 +81,11 @@ class UserSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def validate_username(self, value):
+
+    def validate_username(
+        self,
+        value,
+    ):
         value = value.strip()
 
         if not value:
@@ -65,10 +93,14 @@ class UserSerializer(serializers.ModelSerializer):
                 "O nome de usuário é obrigatório."
             )
 
-        queryset = User.objects.filter(username__iexact=value)
+        queryset = User.objects.filter(
+            username__iexact=value,
+        )
 
         if self.instance:
-            queryset = queryset.exclude(pk=self.instance.pk)
+            queryset = queryset.exclude(
+                pk=self.instance.pk,
+            )
 
         if queryset.exists():
             raise serializers.ValidationError(
@@ -77,29 +109,14 @@ class UserSerializer(serializers.ModelSerializer):
 
         return value
 
-    def validate_cpf(self, value):
-        if value is None:
-            return value
 
-        value = value.strip()
-
-        if not value:
-            return None
-
-        queryset = User.objects.filter(cpf=value)
-
-        if self.instance:
-            queryset = queryset.exclude(pk=self.instance.pk)
-
-        if queryset.exists():
-            raise serializers.ValidationError(
-                "Já existe um usuário com esse CPF."
-            )
-
-        return value
-
-    def validate(self, attrs):
-        request = self.context.get("request")
+    def validate(
+        self,
+        attrs,
+    ):
+        request = self.context.get(
+            "request",
+        )
 
         if (
             self.instance
@@ -111,46 +128,79 @@ class UserSerializer(serializers.ModelSerializer):
 
             if (
                 self.instance.role
-                and new_role.id != self.instance.role.id
+                and
+                new_role.id
+                != self.instance.role.id
             ):
                 raise serializers.ValidationError(
                     {
                         "role_id": (
-                            "Você não pode alterar o próprio perfil "
-                            "de acesso por esta tela."
+                            "Você não pode alterar "
+                            "o próprio perfil de acesso "
+                            "por esta tela."
                         )
                     }
                 )
 
         return attrs
 
-    def create(self, validated_data):
-        password = validated_data.pop("password", None)
+
+    def create(
+        self,
+        validated_data,
+    ):
+        password = validated_data.pop(
+            "password",
+            None,
+        )
 
         if not password:
             raise serializers.ValidationError(
                 {
                     "password": (
-                        "A senha é obrigatória ao cadastrar "
-                        "um funcionário."
+                        "A senha é obrigatória ao "
+                        "cadastrar um funcionário."
                     )
                 }
             )
 
-        user = User(**validated_data)
-        user.set_password(password)
+        user = User(
+            **validated_data,
+        )
+
+        user.set_password(
+            password,
+        )
+
         user.save()
 
         return user
 
-    def update(self, instance, validated_data):
-        password = validated_data.pop("password", None)
 
-        for attribute, value in validated_data.items():
-            setattr(instance, attribute, value)
+    def update(
+        self,
+        instance,
+        validated_data,
+    ):
+        password = validated_data.pop(
+            "password",
+            None,
+        )
+
+        for (
+            attribute,
+            value,
+        ) in validated_data.items():
+            setattr(
+                instance,
+                attribute,
+                value,
+            )
 
         if password:
-            instance.set_password(password)
+            instance.set_password(
+                password,
+            )
 
         instance.save()
 

@@ -29,6 +29,10 @@ from .services.route_audit import (
     generate_route_audit,
 )
 
+from .services.standard_route import (
+    create_standard_route_from_trip,
+)
+
 
 class StandardRouteViewSet(
     ModelViewSet
@@ -178,6 +182,99 @@ class TripViewSet(
     @action(
         detail=True,
         methods=[
+            "post",
+        ],
+        url_path="create-standard-route",
+    )
+    def create_standard_route(
+        self,
+        request,
+        pk=None,
+    ):
+        trip = self.get_object()
+
+        user = request.user
+
+        role = getattr(
+            user,
+            "role",
+            None,
+        )
+
+        role_name = (
+            role.name
+            if role
+            else None
+        )
+
+        allowed_roles = {
+            "Administrador",
+            "Gestor",
+        }
+
+        if (
+            not user.is_superuser
+            and role_name
+            not in allowed_roles
+        ):
+            return Response(
+                {
+                    "detail": (
+                        "Somente Gestor ou "
+                        "Administrador pode "
+                        "criar uma rota padrão "
+                        "a partir de uma viagem."
+                    )
+                },
+                status=(
+                    status.HTTP_403_FORBIDDEN
+                ),
+            )
+
+        try:
+            standard_route = (
+                create_standard_route_from_trip(
+                    trip
+                )
+            )
+
+        except ValidationError as exc:
+            if hasattr(
+                exc,
+                "message_dict",
+            ):
+                data = (
+                    exc.message_dict
+                )
+            else:
+                data = {
+                    "detail":
+                        exc.messages,
+                }
+
+            return Response(
+                data,
+                status=(
+                    status.HTTP_400_BAD_REQUEST
+                ),
+            )
+
+        serializer = (
+            StandardRouteSerializer(
+                standard_route
+            )
+        )
+
+        return Response(
+            serializer.data,
+            status=(
+                status.HTTP_201_CREATED
+            ),
+        )
+
+    @action(
+        detail=True,
+        methods=[
             "get",
             "post",
         ],
@@ -203,8 +300,7 @@ class TripViewSet(
                         )
                     },
                     status=(
-                        status
-                        .HTTP_404_NOT_FOUND
+                        status.HTTP_404_NOT_FOUND
                     ),
                 )
 
@@ -243,8 +339,7 @@ class TripViewSet(
             return Response(
                 data,
                 status=(
-                    status
-                    .HTTP_400_BAD_REQUEST
+                    status.HTTP_400_BAD_REQUEST
                 ),
             )
 
@@ -256,7 +351,9 @@ class TripViewSet(
 
         return Response(
             serializer.data,
-            status=status.HTTP_200_OK,
+            status=(
+                status.HTTP_200_OK
+            ),
         )
 
     @action(
@@ -365,8 +462,7 @@ class DashboardView(APIView):
                     )
                 },
                 status=(
-                    status
-                    .HTTP_403_FORBIDDEN
+                    status.HTTP_403_FORBIDDEN
                 ),
             )
 
